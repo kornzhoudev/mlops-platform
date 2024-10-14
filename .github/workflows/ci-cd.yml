@@ -1,0 +1,79 @@
+# name: CI/CD Pipeline
+
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
+
+# jobs:
+#   # Job for running tests
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Set up Python
+#       uses: actions/setup-python@v2
+#       with:
+#         python-version: 3.8
+#     - name: Install dependencies
+#       run: |
+#         python -m pip install --upgrade pip
+#         pip install -r requirements.txt
+#     - name: Run tests
+#       run: pytest backend/tests/
+
+#   # Job for building and deploying the backend
+#   build-and-deploy-backend:
+#     needs: test
+#     runs-on: ubuntu-latest
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Configure AWS credentials
+#       uses: aws-actions/configure-aws-credentials@v1
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#         aws-region: us-east-1
+#     - name: Train model
+#       run: python backend/model/train.py
+#     - name: Deploy model to SageMaker
+#       run: |
+#         aws sagemaker create-model --model-name sentiment-model --primary-container file://container.json --execution-role-arn ${{ secrets.SAGEMAKER_ROLE_ARN }}
+#         aws sagemaker create-endpoint-config --endpoint-config-name sentiment-endpoint-config --production-variants file://variants.json
+#         aws sagemaker create-endpoint --endpoint-name sentiment-endpoint --endpoint-config-name sentiment-endpoint-config
+#     - name: Update Lambda function
+#       run: |
+#         zip -j lambda.zip backend/api/lambda_function.py
+#         aws lambda update-function-code --function-name sentiment-analysis-function --zip-file fileb://lambda.zip
+
+#   # Job for building and deploying the frontend
+#   build-and-deploy-frontend:
+#     needs: build-and-deploy-backend
+#     runs-on: ubuntu-latest
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Set up Node.js
+#       uses: actions/setup-node@v2
+#       with:
+#         node-version: 14
+#     - name: Install dependencies
+#       run: |
+#         cd frontend
+#         npm ci
+#     - name: Build
+#       run: |
+#         cd frontend
+#         npm run build
+#     - name: Configure AWS credentials
+#       uses: aws-actions/configure-aws-credentials@v1
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#         aws-region: us-east-1
+#     - name: Deploy to S3
+#       run: |
+#         aws s3 sync frontend/build/ s3://${{ secrets.S3_BUCKET }} --delete
+#     - name: Invalidate CloudFront cache
+#       run: |
+#         aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"

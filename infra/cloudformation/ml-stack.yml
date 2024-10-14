@@ -1,0 +1,274 @@
+# AWSTemplateFormatVersion: '2010-09-09'
+# Description: 'CloudFormation template for Sentiment Analysis MLOps project'
+
+# Parameters:
+#   ProjectName:
+#     Type: String
+#     Default: sentiment-analysis
+#     Description: Name of the project, used as prefix for resource names
+
+# Resources:
+#   # VPC and Networking
+#   VPC:
+#     Type: AWS::EC2::VPC
+#     Properties:
+#       CidrBlock: 10.0.0.0/16
+#       EnableDnsHostnames: true
+#       EnableDnsSupport: true
+#       InstanceTenancy: default
+#       Tags:
+#         - Key: Name
+#           Value: !Sub ${ProjectName}-VPC
+
+#   PublicSubnet1:
+#     Type: AWS::EC2::Subnet
+#     Properties:
+#       VpcId: !Ref VPC
+#       AvailabilityZone: !Select [0, !GetAZs ""]
+#       CidrBlock: 10.0.1.0/24
+#       MapPublicIpOnLaunch: true
+#       Tags:
+#         - Key: Name
+#           Value: !Sub ${ProjectName}-PublicSubnet1
+
+#   PublicSubnet2:
+#     Type: AWS::EC2::Subnet
+#     Properties:
+#       VpcId: !Ref VPC
+#       AvailabilityZone: !Select [1, !GetAZs ""]
+#       CidrBlock: 10.0.2.0/24
+#       MapPublicIpOnLaunch: true
+#       Tags:
+#         - Key: Name
+#           Value: !Sub ${ProjectName}-PublicSubnet2
+
+#   InternetGateway:
+#     Type: AWS::EC2::InternetGateway
+
+#   AttachGateway:
+#     Type: AWS::EC2::VPCGatewayAttachment
+#     Properties:
+#       VpcId: !Ref VPC
+#       InternetGatewayId: !Ref InternetGateway
+
+#   PublicRouteTable:
+#     Type: AWS::EC2::RouteTable
+#     Properties:
+#       VpcId: !Ref VPC
+#       Tags:
+#         - Key: Name
+#           Value: !Sub ${ProjectName}-PublicRouteTable
+
+#   PublicRoute:
+#     Type: AWS::EC2::Route
+#     DependsOn: AttachGateway
+#     Properties:
+#       RouteTableId: !Ref PublicRouteTable
+#       DestinationCidrBlock: 0.0.0.0/0
+#       GatewayId: !Ref InternetGateway
+
+#   PublicSubnet1RouteTableAssociation:
+#     Type: AWS::EC2::SubnetRouteTableAssociation
+#     Properties:
+#       SubnetId: !Ref PublicSubnet1
+#       RouteTableId: !Ref PublicRouteTable
+
+#   PublicSubnet2RouteTableAssociation:
+#     Type: AWS::EC2::SubnetRouteTableAssociation
+#     Properties:
+#       SubnetId: !Ref PublicSubnet2
+#       RouteTableId: !Ref PublicRouteTable
+
+#   # S3 Buckets
+#   FrontendBucket:
+#     Type: AWS::S3::Bucket
+#     Properties:
+#       BucketName: !Sub ${ProjectName}-frontend-${AWS::AccountId}
+#       PublicAccessBlockConfiguration:
+#         BlockPublicAcls: true
+#         BlockPublicPolicy: true
+#         IgnorePublicAcls: true
+#         RestrictPublicBuckets: true
+
+#   ModelArtifactsBucket:
+#     Type: AWS::S3::Bucket
+#     Properties:
+#       BucketName: !Sub ${ProjectName}-model-artifacts-${AWS::AccountId}
+#       VersioningConfiguration:
+#         Status: Enabled
+
+#   # IAM Roles
+#   SageMakerExecutionRole:
+#     Type: AWS::IAM::Role
+#     Properties:
+#       AssumeRolePolicyDocument:
+#         Version: '2012-10-17'
+#         Statement:
+#           - Effect: Allow
+#             Principal:
+#               Service: sagemaker.amazonaws.com
+#             Action: sts:AssumeRole
+#       ManagedPolicyArns:
+#         - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+#       Policies:
+#         - PolicyName: S3Access
+#           PolicyDocument:
+#             Version: '2012-10-17'
+#             Statement:
+#               - Effect: Allow
+#                 Action:
+#                   - s3:GetObject
+#                   - s3:PutObject
+#                   - s3:ListBucket
+#                 Resource:
+#                   - !GetAtt ModelArtifactsBucket.Arn
+#                   - !Join ['', [!GetAtt ModelArtifactsBucket.Arn, '/*']]
+
+#   LambdaExecutionRole:
+#     Type: AWS::IAM::Role
+#     Properties:
+#       AssumeRolePolicyDocument:
+#         Version: '2012-10-17'
+#         Statement:
+#           - Effect: Allow
+#             Principal:
+#               Service: lambda.amazonaws.com
+#             Action: sts:AssumeRole
+#       ManagedPolicyArns:
+#         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+#       Policies:
+#         - PolicyName: SageMakerInvoke
+#           PolicyDocument:
+#             Version: '2012-10-17'
+#             Statement:
+#               - Effect: Allow
+#                 Action:
+#                   - sagemaker:InvokeEndpoint
+#                 Resource: '*'
+
+#   # Lambda Function
+#   SentimentAnalysisFunction:
+#     Type: AWS::Lambda::Function
+#     Properties:
+#       FunctionName: !Sub ${ProjectName}-sentiment-analysis
+#       Handler: index.handler
+#       Role: !GetAtt LambdaExecutionRole.Arn
+#       Code:
+#         ZipFile: |
+#           import json
+#           import boto3
+
+#           def handler(event, context):
+#               # Implement sentiment analysis logic here
+#               return {
+#                   'statusCode': 200,
+#                   'body': json.dumps('Sentiment analysis result')
+#               }
+#       Runtime: python3.8
+#       Timeout: 30
+#       MemorySize: 128
+
+#   # API Gateway
+#   SentimentAnalysisApi:
+#     Type: AWS::ApiGateway::RestApi
+#     Properties:
+#       Name: !Sub ${ProjectName}-api
+
+#   ApiResource:
+#     Type: AWS::ApiGateway::Resource
+#     Properties:
+#       ParentId: !GetAtt SentimentAnalysisApi.RootResourceId
+#       PathPart: analyze
+#       RestApiId: !Ref SentimentAnalysisApi
+
+#   ApiMethod:
+#     Type: AWS::ApiGateway::Method
+#     Properties:
+#       HttpMethod: POST
+#       ResourceId: !Ref ApiResource
+#       RestApiId: !Ref SentimentAnalysisApi
+#       AuthorizationType: NONE
+#       Integration:
+#         Type: AWS_PROXY
+#         IntegrationHttpMethod: POST
+#         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SentimentAnalysisFunction.Arn}/invocations
+
+#   ApiDeployment:
+#     Type: AWS::ApiGateway::Deployment
+#     DependsOn: ApiMethod
+#     Properties:
+#       RestApiId: !Ref SentimentAnalysisApi
+#       StageName: prod
+
+#   # SageMaker Model
+#   SentimentModel:
+#     Type: AWS::SageMaker::Model
+#     Properties:
+#       ExecutionRoleArn: !GetAtt SageMakerExecutionRole.Arn
+#       PrimaryContainer:
+#         Image: '763104351884.dkr.ecr.us-east-1.amazonaws.com/huggingface-pytorch-inference:1.7.1-transformers4.6.1-cpu-py36-ubuntu18.04'
+#         ModelDataUrl: !Sub s3://${ModelArtifactsBucket}/${ProjectName}-model.tar.gz
+#       ModelName: !Sub ${ProjectName}-model
+
+#   # SageMaker Endpoint Configuration
+#   SentimentEndpointConfig:
+#     Type: AWS::SageMaker::EndpointConfig
+#     Properties:
+#       ProductionVariants:
+#         - InitialInstanceCount: 1
+#           InstanceType: ml.t2.medium
+#           ModelName: !GetAtt SentimentModel.ModelName
+#           VariantName: AllTraffic
+
+#   # SageMaker Endpoint
+#   SentimentEndpoint:
+#     Type: AWS::SageMaker::Endpoint
+#     Properties:
+#       EndpointConfigName: !GetAtt SentimentEndpointConfig.EndpointConfigName
+#       EndpointName: !Sub ${ProjectName}-endpoint
+
+#   # CloudFront Distribution
+#   CloudFrontDistribution:
+#     Type: AWS::CloudFront::Distribution
+#     Properties:
+#       DistributionConfig:
+#         DefaultCacheBehavior:
+#           ViewerProtocolPolicy: redirect-to-https
+#           TargetOriginId: S3Origin
+#           MinTTL: 0
+#           AllowedMethods:
+#             - GET
+#             - HEAD
+#             - OPTIONS
+#           ForwardedValues:
+#             QueryString: false
+#         Enabled: true
+#         HttpVersion: http2
+#         Origins:
+#           - DomainName: !GetAtt FrontendBucket.RegionalDomainName
+#             Id: S3Origin
+#             S3OriginConfig: {}
+
+#   # CloudWatch Log Group
+#   LambdaLogGroup:
+#     Type: AWS::Logs::LogGroup
+#     Properties:
+#       LogGroupName: !Sub /aws/lambda/${SentimentAnalysisFunction}
+#       RetentionInDays: 30
+
+# Outputs:
+#   ApiEndpoint:
+#     Description: "API Gateway endpoint URL for Prod stage"
+#     Value: !Sub "https://${SentimentAnalysisApi}.execute-api.${AWS::Region}.amazonaws.com/prod/"
+#   CloudFrontDomainName:
+#     Description: "Domain name of the CloudFront distribution"
+#     Value: !GetAtt CloudFrontDistribution.DomainName
+#   FrontendBucketName:
+#     Description: "Name of the S3 bucket hosting the frontend"
+#     Value: !Ref FrontendBucket
+#   ModelArtifactsBucketName:
+#     Description: "Name of the S3 bucket for model artifacts"
+#     Value: !Ref ModelArtifactsBucket
+#   SageMakerEndpointName:
+#     Description: "Name of the SageMaker endpoint"
+#     Value: !Ref SentimentEndpoint
