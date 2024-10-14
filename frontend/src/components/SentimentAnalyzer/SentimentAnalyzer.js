@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { ThumbsUp, ThumbsDown, Search } from 'lucide-react';
 
 const SentimentAnalyzer = () => {
@@ -6,12 +7,19 @@ const SentimentAnalyzer = () => {
   const [sentiment, setSentiment] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  //api gateway endpoint just for testing purposes
+  const apiGatewayEndpoint = 'https://h5q4xxbiv4.execute-api.ap-southeast-2.amazonaws.com/prod';
+
   const analyzeSentiment = async () => {
-    setIsLoading(true);
-    // Simulating API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSentiment(Math.random() > 0.5 ? 'Positive' : 'Negative');
-    setIsLoading(false);
+    setIsLoading(true)
+    try {
+      const response = await axios.post(`${apiGatewayEndpoint}/analyze`, { text });
+      setSentiment(response.data.sentiment);
+    } catch (error) {
+      console.error('Error analyzing sentiment:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
