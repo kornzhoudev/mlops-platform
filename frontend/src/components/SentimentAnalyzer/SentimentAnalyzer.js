@@ -4,19 +4,20 @@ import { ThumbsUp, ThumbsDown, Search } from 'lucide-react';
 
 const SentimentAnalyzer = () => {
   const [text, setText] = useState('');
-  const [sentiment, setSentiment] = useState(null);
+  const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   //api gateway endpoint just for testing purposes
   const apiGatewayEndpoint = process.env.REACT_APP_API_GATEWAY_ENDPOINT;
 
   const analyzeSentiment = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const response = await axios.post(`${apiGatewayEndpoint}/analyze`, { text });
-      setSentiment(response.data.sentiment);
+      setResult(response.data);
     } catch (error) {
       console.error('Error analyzing sentiment:', error);
+      setResult(null);
     } finally {
       setIsLoading(false);
     }
@@ -50,18 +51,21 @@ const SentimentAnalyzer = () => {
           </>
         )}
       </button>
-      {sentiment && (
-        <div className={`mt-8 p-6 rounded-lg ${sentiment === 'Positive' ? 'bg-green-100' : 'bg-red-100'} transition-all duration-500 ease-in-out`}>
+      {result && (
+        <div className={`mt-8 p-6 rounded-lg ${result.sentiment === 'Positive' ? 'bg-green-100' : 'bg-red-100'} transition-all duration-500 ease-in-out`}>
           <h2 className="text-2xl font-semibold mb-4">Analysis Result:</h2>
           <div className="flex items-center text-lg">
-            {sentiment === 'Positive' ? (
+            {result.sentiment === 'Positive' ? (
               <ThumbsUp className="mr-3 h-8 w-8 text-green-600" />
             ) : (
               <ThumbsDown className="mr-3 h-8 w-8 text-red-600" />
             )}
-            <span className={sentiment === 'Positive' ? 'text-green-700' : 'text-red-700'}>
-              {sentiment}
+            <span className={result.sentiment === 'Positive' ? 'text-green-700' : 'text-red-700'}>
+              {result.sentiment}
             </span>
+          </div>
+          <div className="mt-2">
+            Confidence: {(result.confidence * 100).toFixed(2)}%
           </div>
         </div>
       )}
