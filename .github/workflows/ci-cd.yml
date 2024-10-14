@@ -49,7 +49,7 @@ jobs:
 
   # Job for building and deploying the frontend
   build-and-deploy-frontend:
-    needs: build-and-deploy-backend
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
