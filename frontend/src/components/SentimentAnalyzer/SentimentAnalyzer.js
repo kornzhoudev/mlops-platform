@@ -18,31 +18,33 @@ const SentimentAnalyzer = () => {
     try {
       const response = await axios.post(`${API_GATEWAY_ENDPOINT}/analyze`, { text });
       console.log('Raw API Response:', response);
+      
+      const data = response.data;
+      console.log('API Response data:', data);
   
-      let parsedData = response.data;
-      console.log('API Response data:', parsedData);
-  
-      if (typeof parsedData === 'string') {
-        parsedData = JSON.parse(parsedData);
-      }
-  
-      if (parsedData.sentiment && parsedData.confidence) {
-        const result = {
-          sentiment: parsedData.sentiment,
-          confidence: parseFloat(parsedData.confidence)
-        };
-        setResult(result);
-        setGlobalSentiment(result);
+      if (typeof data === 'string') {
+        // If the response is a string, try to parse it
+        const parsedData = JSON.parse(data);
+        if (parsedData.sentiment && parsedData.confidence) {
+          setResult({
+            sentiment: parsedData.sentiment,
+            confidence: parseFloat(parsedData.confidence)
+          });
+        } else {
+          throw new Error('Invalid response format from server');
+        }
+      } else if (data.sentiment && data.confidence) {
+        // If the response is already an object
+        setResult({
+          sentiment: data.sentiment,
+          confidence: parseFloat(data.confidence)
+        });
       } else {
         throw new Error('Invalid response format from server');
       }
     } catch (error) {
       console.error('Error analyzing sentiment:', error);
-      let errorMessage = 'An error occurred while analyzing sentiment';
-      if (error.response && error.response.data) {
-        errorMessage = `${error.response.data.errorType}: ${error.response.data.error}`;
-      }
-      setError(errorMessage);
+      setError(error.message || 'An error occurred while analyzing sentiment');
       setResult(null);
     } finally {
       setIsLoading(false);
