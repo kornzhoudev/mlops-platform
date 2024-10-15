@@ -15,23 +15,26 @@ const SentimentAnalyzer = () => {
     setError(null);
     try {
       const response = await axios.post(`${API_GATEWAY_ENDPOINT}/analyze`, { text });
-      console.log('API Response:', response.data);
-      
-      if (response.data.error) {
-        throw new Error(response.data.error);
+      console.log('Raw API Response:', response);
+  
+      const data = response.data;
+      console.log('API Response data:', data);
+  
+      if (data.error) {
+        throw new Error(data.error);
       }
-      
-      if (response.data.sentiment && response.data.confidence) {
+  
+      if (data.sentiment && data.confidence) {
         setResult({
-          sentiment: response.data.sentiment,
-          confidence: parseFloat(response.data.confidence)
+          sentiment: data.sentiment,
+          confidence: parseFloat(data.confidence)
         });
       } else {
         throw new Error('Invalid response format from server');
       }
     } catch (error) {
       console.error('Error analyzing sentiment:', error);
-      setError(error.message || 'An error occurred while analyzing sentiment');
+      setError(error.response?.data?.error || error.message || 'An error occurred while analyzing sentiment');
       setResult(null);
     } finally {
       setIsLoading(false);
