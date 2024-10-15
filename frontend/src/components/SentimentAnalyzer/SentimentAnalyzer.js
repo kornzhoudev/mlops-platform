@@ -10,7 +10,7 @@ const SentimentAnalyzer = () => {
   //api gateway endpoint just for testing purposes
   //const apiGatewayEndpoint = process.env.REACT_APP_API_GATEWAY_ENDPOINT;
   //hard coded for testing
-  const apiGatewayEndpoint = https://h5q4xxbiv4.execute-api.ap-southeast-2.amazonaws.com/prod
+  const apiGatewayEndpoint = "https://h5q4xxbiv4.execute-api.ap-southeast-2.amazonaws.com/prod"
 
   const analyzeSentiment = async () => {
     setIsLoading(true);
