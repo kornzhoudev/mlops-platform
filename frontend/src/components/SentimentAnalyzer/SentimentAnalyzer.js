@@ -6,31 +6,32 @@ const SentimentAnalyzer = () => {
   const [text, setText] = useState('');
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  //api gateway endpoint just for testing purposes
-  //const apiGatewayEndpoint = process.env.REACT_APP_API_GATEWAY_ENDPOINT;
-  //hard coded for testing
-  const apiGatewayEndpoint = "https://h5q4xxbiv4.execute-api.ap-southeast-2.amazonaws.com/prod"
+  const apiGatewayEndpoint = "https://h5q4xxbiv4.execute-api.ap-southeast-2.amazonaws.com/prod";
 
   const analyzeSentiment = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const response = await axios.post(`${apiGatewayEndpoint}/analyze`, { text });
-      setResult(response.data);
+      console.log('API Response:', response.data); // For debugging
+      if (response.data && response.data.sentiment && response.data.confidence) {
+        setResult({
+          sentiment: response.data.sentiment,
+          confidence: response.data.confidence
+        });
+      } else {
+        throw new Error('Invalid response format from server');
+      }
     } catch (error) {
       console.error('Error analyzing sentiment:', error);
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('Error data:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
+        setError(`Server error: ${error.response.status}`);
       } else if (error.request) {
-        // The request was made but no response was received
-        console.error('Error request:', error.request);
+        setError('No response received from server');
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('Error message:', error.message);
+        setError(error.message);
       }
       setResult(null);
     } finally {
@@ -66,16 +67,21 @@ const SentimentAnalyzer = () => {
           </>
         )}
       </button>
+      {error && (
+        <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-lg">
+          Error: {error}
+        </div>
+      )}
       {result && (
-        <div className={`mt-8 p-6 rounded-lg ${result.sentiment === 'Positive' ? 'bg-green-100' : 'bg-red-100'} transition-all duration-500 ease-in-out`}>
+        <div className={`mt-8 p-6 rounded-lg ${result.sentiment.toLowerCase() === 'positive' ? 'bg-green-100' : 'bg-red-100'} transition-all duration-500 ease-in-out`}>
           <h2 className="text-2xl font-semibold mb-4">Analysis Result:</h2>
           <div className="flex items-center text-lg">
-            {result.sentiment === 'Positive' ? (
+            {result.sentiment.toLowerCase() === 'positive' ? (
               <ThumbsUp className="mr-3 h-8 w-8 text-green-600" />
             ) : (
               <ThumbsDown className="mr-3 h-8 w-8 text-red-600" />
             )}
-            <span className={result.sentiment === 'Positive' ? 'text-green-700' : 'text-red-700'}>
+            <span className={result.sentiment.toLowerCase() === 'positive' ? 'text-green-700' : 'text-red-700'}>
               {result.sentiment}
             </span>
           </div>
