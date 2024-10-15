@@ -16,12 +16,16 @@ const SentimentAnalyzer = () => {
     try {
       const response = await axios.post(`${API_GATEWAY_ENDPOINT}/analyze`, { text });
       console.log('API Response:', response.data);
-      if (response.data && response.data.sentiment && response.data.confidence) {
-        const result = {
+      
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
+      
+      if (response.data.sentiment && response.data.confidence) {
+        setResult({
           sentiment: response.data.sentiment,
-          confidence: response.data.confidence
-        };
-        setResult(result);
+          confidence: parseFloat(response.data.confidence)
+        });
       } else {
         throw new Error('Invalid response format from server');
       }
