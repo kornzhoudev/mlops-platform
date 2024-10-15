@@ -18,18 +18,18 @@ const SentimentAnalyzer = () => {
     try {
       const response = await axios.post(`${API_GATEWAY_ENDPOINT}/analyze`, { text });
       console.log('Raw API Response:', response);
-
-      const data = response.data;
-      console.log('API Response data:', data);
-
-      if (typeof data === 'string') {
-        data = JSON.parse(data);
+  
+      let parsedData = response.data;
+      console.log('API Response data:', parsedData);
+  
+      if (typeof parsedData === 'string') {
+        parsedData = JSON.parse(parsedData);
       }
-
-      if (data.sentiment && data.confidence) {
+  
+      if (parsedData.sentiment && parsedData.confidence) {
         const result = {
-          sentiment: data.sentiment,
-          confidence: parseFloat(data.confidence)
+          sentiment: parsedData.sentiment,
+          confidence: parseFloat(parsedData.confidence)
         };
         setResult(result);
         setGlobalSentiment(result);
