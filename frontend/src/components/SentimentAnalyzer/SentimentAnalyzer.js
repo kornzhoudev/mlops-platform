@@ -14,7 +14,7 @@ const SentimentAnalyzer = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${apiGatewayEndpoint}/analyze`, { text });
+      const response = await axios.post(`${API_GATEWAY_ENDPOINT}/analyze`, { text });
       console.log('API Response:', response.data);
       if (response.data && response.data.sentiment && response.data.confidence) {
         const result = {
