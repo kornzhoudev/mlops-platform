@@ -38,7 +38,11 @@ const SentimentAnalyzer = () => {
       }
     } catch (error) {
       console.error('Error analyzing sentiment:', error);
-      setError(error.response?.data?.message || error.message || 'An error occurred while analyzing sentiment');
+      let errorMessage = 'An error occurred while analyzing sentiment';
+      if (error.response && error.response.data) {
+        errorMessage = `${error.response.data.errorType}: ${error.response.data.error}`;
+      }
+      setError(errorMessage);
       setResult(null);
     } finally {
       setIsLoading(false);
