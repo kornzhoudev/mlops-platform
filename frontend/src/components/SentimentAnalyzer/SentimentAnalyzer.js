@@ -1,7 +1,6 @@
 import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { ThumbsUp, ThumbsDown, Search } from 'lucide-react';
-import { SentimentContext } from '../../context/SentimentContext';
 
 const API_GATEWAY_ENDPOINT = "https://h5q4xxbiv4.execute-api.ap-southeast-2.amazonaws.com/prod";
 
@@ -10,35 +9,19 @@ const SentimentAnalyzer = () => {
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { setGlobalSentiment } = useContext(SentimentContext);
 
   const analyzeSentiment = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${API_GATEWAY_ENDPOINT}/analyze`, { text });
-      console.log('Raw API Response:', response);
-      
-      const data = response.data;
-      console.log('API Response data:', data);
-  
-      if (typeof data === 'string') {
-        // If the response is a string, try to parse it
-        const parsedData = JSON.parse(data);
-        if (parsedData.sentiment && parsedData.confidence) {
-          setResult({
-            sentiment: parsedData.sentiment,
-            confidence: parseFloat(parsedData.confidence)
-          });
-        } else {
-          throw new Error('Invalid response format from server');
-        }
-      } else if (data.sentiment && data.confidence) {
-        // If the response is already an object
-        setResult({
-          sentiment: data.sentiment,
-          confidence: parseFloat(data.confidence)
-        });
+      const response = await axios.post(`${apiGatewayEndpoint}/analyze`, { text });
+      console.log('API Response:', response.data);
+      if (response.data && response.data.sentiment && response.data.confidence) {
+        const result = {
+          sentiment: response.data.sentiment,
+          confidence: response.data.confidence
+        };
+        setResult(result);
       } else {
         throw new Error('Invalid response format from server');
       }
