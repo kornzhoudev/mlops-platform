@@ -1,4 +1,5 @@
 import json
+import os
 import boto3
 import logging
 
@@ -6,7 +7,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 runtime = boto3.client('runtime.sagemaker')
-ENDPOINT_NAME = 'sentiment-analysis-endpoint-1728949792'
+ENDPOINT_NAME = os.environ['SAGEMAKER_ENDPOINT_NAME']
 
 def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event)}")
@@ -20,7 +21,6 @@ def lambda_handler(event, context):
                 body = event['body']
         else:
             body = event  # For non-proxy integration
-
         logger.info(f"Parsed body: {json.dumps(body)}")
         
         if 'text' not in body:
