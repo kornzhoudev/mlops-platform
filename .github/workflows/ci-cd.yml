@@ -26,6 +26,7 @@ jobs:
         npm run test
 
   test-lambda:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -39,6 +40,9 @@ jobs:
         pip install -r requirements.txt
         pip install pytest
     - name: Run tests
+      env:
+        AWS_DEFAULT_REGION: 'ap-southeast-2'
+        SAGEMAKER_ENDPOINT_NAME: 'mock-endpoint'
       run: |
         cd lambda
         pytest
