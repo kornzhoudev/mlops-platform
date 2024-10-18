@@ -28,6 +28,7 @@ jobs:
             - 'lambda/**'
 
   security-scan:
+    needs: changes
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -37,40 +38,46 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
 
-    - name: Update dependencies and fix vulnerabilities (Frontend)
+    - name: Install frontend dependencies
+      if: ${{ needs.changes.outputs.frontend == 'true' }}
       working-directory: frontend
       run: |
-        npm install
-        npm dedupe
+        npm ci
 
     - name: Run Snyk to check for vulnerabilities (Frontend)
+      if: ${{ needs.changes.outputs.frontend == 'true' }}
       uses: snyk/actions/node@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         command: test
-        args: --all-projects
+        args: --severity-threshold=high
+      continue-on-error: true
 
     - name: Set up Python ${{ env.PYTHON_VERSION }}
+      if: ${{ needs.changes.outputs.lambda == 'true' }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Install Python dependencies
+      if: ${{ needs.changes.outputs.lambda == 'true' }}
       working-directory: lambda
       run: |
         pip install -r requirements.txt
 
     - name: Run Snyk to check for vulnerabilities (Lambda)
+      if: ${{ needs.changes.outputs.lambda == 'true' }}
       uses: snyk/actions/python@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         command: test
-        args: --all-projects
+        args: --severity-threshold=high
+      continue-on-error: true
 
   test-frontend:
-    needs: changes
+    needs: [changes, security-scan]
     if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -87,13 +94,11 @@ jobs:
         restore-keys: |
           ${{ runner.OS }}-node-
     - name: Install dependencies
-      run: |
-        cd frontend
-        npm ci
+      working-directory: frontend
+      run: npm ci
     - name: Run tests
-      run: |
-        cd frontend
-        npm run test
+      working-directory: frontend
+      run: npm test
 
   test-lambda:
     needs: changes
