@@ -32,6 +32,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: Use Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Update dependencies and fix vulnerabilities (Frontend)
+      run: |
+        cd frontend
+        npm install react-scripts@latest
+        npm update
+        npm audit fix
+
     - name: Run Snyk to check for vulnerabilities (Frontend)
       uses: snyk/actions/node@master
       env:
@@ -40,6 +52,16 @@ jobs:
         command: test
         args: --all-projects
         working-directory: frontend
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Python dependencies
+      run: |
+        cd lambda
+        pip install -r requirements.txt
 
     - name: Run Snyk to check for vulnerabilities (Lambda)
       uses: snyk/actions/python@master
