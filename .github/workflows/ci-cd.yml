@@ -76,8 +76,9 @@ jobs:
       run: |
         aws s3 sync frontend/build/ s3://${{ secrets.S3_BUCKET }} --delete
 
+
   deploy-lambda:
-    needs: [test, test-lambda, build-and-deploy-frontend]
+    needs: [test, test-lambda]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -101,5 +102,35 @@ jobs:
         aws-region: ap-southeast-2
     - name: Deploy to Lambda
       run: |
-        aws lambda update-function-code --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --zip-file fileb://lambda_function.zip
-        aws lambda update-function-configuration --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --environment "Variables={SAGEMAKER_ENDPOINT_NAME=${{ secrets.SAGEMAKER_ENDPOINT_NAME }}}"
+        MAX_RETRIES=5
+        RETRY_INTERVAL=10
+        for i in $(seq 1 $MAX_RETRIES); do
+          if aws lambda update-function-code --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --zip-file fileb://lambda_function.zip; then
+            echo "Lambda function updated successfully"
+            break
+          else
+            if [ $i -eq $MAX_RETRIES ]; then
+              echo "Failed to update Lambda function after $MAX_RETRIES attempts"
+              exit 1
+            fi
+            echo "Update failed, retrying in $RETRY_INTERVAL seconds..."
+            sleep $RETRY_INTERVAL
+          fi
+        done
+    - name: Update Lambda configuration
+      run: |
+        MAX_RETRIES=5
+        RETRY_INTERVAL=10
+        for i in $(seq 1 $MAX_RETRIES); do
+          if aws lambda update-function-configuration --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --environment "Variables={SAGEMAKER_ENDPOINT_NAME=${{ secrets.SAGEMAKER_ENDPOINT_NAME }}}"; then
+            echo "Lambda function configuration updated successfully"
+            break
+          else
+            if [ $i -eq $MAX_RETRIES ]; then
+              echo "Failed to update Lambda function configuration after $MAX_RETRIES attempts"
+              exit 1
+            fi
+            echo "Update failed, retrying in $RETRY_INTERVAL seconds..."
+            sleep $RETRY_INTERVAL
+          fi
+        done
