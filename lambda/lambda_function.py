@@ -6,7 +6,8 @@ import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-runtime = boto3.client('runtime.sagemaker')
+session = boto3.Session()
+runtime = session.client('runtime.sagemaker')
 ENDPOINT_NAME = os.environ['SAGEMAKER_ENDPOINT_NAME']
 
 def lambda_handler(event, context):

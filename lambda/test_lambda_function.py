@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 # Mock environment variables
-os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
+os.environ['AWS_DEFAULT_REGION'] = 'ap-southeast-2'
 os.environ['SAGEMAKER_ENDPOINT_NAME'] = 'mock-endpoint'
 
 # Import the lambda function after setting mock environment variables
@@ -19,11 +19,15 @@ def mock_sagemaker_response():
     }
 
 @patch('boto3.client')
-def test_lambda_handler(mock_boto3_client, mock_sagemaker_response):
-    # Set up the mock
-    mock_client = MagicMock()
-    mock_client.invoke_endpoint.return_value = mock_sagemaker_response
-    mock_boto3_client.return_value = mock_client
+@patch('boto3.Session')
+def test_lambda_handler(mock_session, mock_boto3_client, mock_sagemaker_response):
+    # Set up the mock session
+    mock_session_instance = MagicMock()
+    mock_session.return_value = mock_session_instance
+    mock_session_instance.client.return_value = mock_boto3_client
+
+    # Set up the mock client
+    mock_boto3_client.invoke_endpoint.return_value = mock_sagemaker_response
 
     # Mock event
     event = {
@@ -37,7 +41,7 @@ def test_lambda_handler(mock_boto3_client, mock_sagemaker_response):
     response = lambda_handler(event, context)
     
     # Assert the response structure
-    assert response['statusCode'] == 200
+    assert response['statusCode'] == 200, f"Unexpected status code: {response['statusCode']}, body: {response['body']}"
     assert 'body' in response
     
     # Parse the body
@@ -49,7 +53,14 @@ def test_lambda_handler(mock_boto3_client, mock_sagemaker_response):
     assert body['sentiment'] == 'POSITIVE'
     assert body['confidence'] == 0.9
 
-def test_lambda_handler_error():
+@patch('boto3.client')
+@patch('boto3.Session')
+def test_lambda_handler_error(mock_session, mock_boto3_client):
+    # Set up the mock session
+    mock_session_instance = MagicMock()
+    mock_session.return_value = mock_session_instance
+    mock_session_instance.client.return_value = mock_boto3_client
+
     # Test with missing 'text' field
     event = {
         'body': json.dumps({})
