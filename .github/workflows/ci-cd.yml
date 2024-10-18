@@ -41,14 +41,14 @@ jobs:
         pip install pytest
     - name: Run tests
       env:
-        AWS_DEFAULT_REGION: 'ap-southeast-2'
+        AWS_DEFAULT_REGION: 'us-east-1'
         SAGEMAKER_ENDPOINT_NAME: 'mock-endpoint'
       run: |
         cd lambda
         pytest
 
   build-and-deploy-frontend:
-    needs: test
+    needs: [test, test-lambda]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -77,7 +77,7 @@ jobs:
         aws s3 sync frontend/build/ s3://${{ secrets.S3_BUCKET }} --delete
 
   deploy-lambda:
-    needs: [test, test-lambda]
+    needs: [test, test-lambda, build-and-deploy-frontend]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

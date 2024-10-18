@@ -4,11 +4,20 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 # Mock environment variables
-os.environ['AWS_DEFAULT_REGION'] = 'ap-southeast-2'
+os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 os.environ['SAGEMAKER_ENDPOINT_NAME'] = 'mock-endpoint'
 
-# Import the lambda function after setting mock environment variables
-from lambda_function import lambda_handler
+# Mock entire boto3 module
+mock_boto3 = MagicMock()
+mock_session = MagicMock()
+mock_client = MagicMock()
+
+mock_boto3.Session.return_value = mock_session
+mock_session.client.return_value = mock_client
+
+# Apply the mock before importing the lambda function
+with patch.dict('sys.modules', {'boto3': mock_boto3}):
+    from lambda_function import lambda_handler
 
 @pytest.fixture
 def mock_sagemaker_response():
@@ -18,16 +27,9 @@ def mock_sagemaker_response():
         ]).encode())
     }
 
-@patch('boto3.client')
-@patch('boto3.Session')
-def test_lambda_handler(mock_session, mock_boto3_client, mock_sagemaker_response):
-    # Set up the mock session
-    mock_session_instance = MagicMock()
-    mock_session.return_value = mock_session_instance
-    mock_session_instance.client.return_value = mock_boto3_client
-
-    # Set up the mock client
-    mock_boto3_client.invoke_endpoint.return_value = mock_sagemaker_response
+def test_lambda_handler(mock_sagemaker_response):
+    # Set up the mock client response
+    mock_client.invoke_endpoint.return_value = mock_sagemaker_response
 
     # Mock event
     event = {
@@ -53,14 +55,7 @@ def test_lambda_handler(mock_session, mock_boto3_client, mock_sagemaker_response
     assert body['sentiment'] == 'POSITIVE'
     assert body['confidence'] == 0.9
 
-@patch('boto3.client')
-@patch('boto3.Session')
-def test_lambda_handler_error(mock_session, mock_boto3_client):
-    # Set up the mock session
-    mock_session_instance = MagicMock()
-    mock_session.return_value = mock_session_instance
-    mock_session_instance.client.return_value = mock_boto3_client
-
+def test_lambda_handler_error():
     # Test with missing 'text' field
     event = {
         'body': json.dumps({})
