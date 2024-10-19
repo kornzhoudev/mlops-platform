@@ -6,10 +6,14 @@ import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+try:
+    ENDPOINT_NAME = os.environ['SAGEMAKER_ENDPOINT_NAME']
+except KeyError:
+    raise RuntimeError("SAGEMAKER_ENDPOINT_NAME environment variable is not set.")
+
 session = boto3.Session()
 runtime = session.client('runtime.sagemaker')
-ENDPOINT_NAME = os.environ['SAGEMAKER_ENDPOINT_NAME']
-print(ENDPOINT_NAME)
+logger.info(f"SageMaker Endpoint: {ENDPOINT_NAME}")
 
 def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event)}")

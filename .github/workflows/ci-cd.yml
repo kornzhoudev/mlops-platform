@@ -75,10 +75,9 @@ jobs:
       uses: snyk/actions/python@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        SNYK_WORKING_DIRECTORY: lambda
       with:
         command: test
-        args: --severity-threshold=high
+        args: --file=lambda/requirements.txt --severity-threshold=high
 
   test-frontend:
     needs: [changes, security-scan]
@@ -155,7 +154,7 @@ jobs:
         locust --headless -f performance_test.py --users 10 --spawn-rate 1 -t 1m
 
   build-and-deploy:
-    needs: [changes, test-frontend, test-lambda, performance-test-lambda]
+    needs: [test-frontend, performance-test-lambda]
     if: ${{ always() && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.lambda == 'true') }}
     runs-on: ubuntu-latest
     steps:
