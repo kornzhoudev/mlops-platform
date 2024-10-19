@@ -91,7 +91,7 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
     - name: Cache npm dependencies
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.npm
         key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -115,7 +115,7 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     - name: Cache pip dependencies
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -156,7 +156,7 @@ jobs:
 
   build-and-deploy:
     needs: [changes, test-frontend, test-lambda, security-scan, performance-test-lambda]
-    if: ${{ success() && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.lambda == 'true') }}
+    if: ${{ always() && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.lambda == 'true') }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
