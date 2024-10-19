@@ -49,6 +49,7 @@ jobs:
       uses: snyk/actions/node@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        SNYK_WORKING_DIRECTORY: frontend
       with:
         command: test
         args: --severity-threshold=high
@@ -70,6 +71,7 @@ jobs:
       uses: snyk/actions/python@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        SNYK_WORKING_DIRECTORY: lambda
       with:
         command: test
         args: --severity-threshold=high
