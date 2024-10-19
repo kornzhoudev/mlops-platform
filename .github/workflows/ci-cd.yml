@@ -69,6 +69,7 @@ jobs:
       working-directory: lambda
       run: |
         pip install -r requirements.txt
+        pip install boto3 pytest
 
     - name: Run Snyk to check for vulnerabilities (Lambda)
       if: ${{ needs.changes.outputs.lambda == 'true' }}
@@ -134,7 +135,7 @@ jobs:
         pytest
 
   performance-test-lambda:
-    needs: [changes, test-lambda]
+    needs: [test-lambda]
     if: ${{ needs.changes.outputs.lambda == 'true' }}
     runs-on: ubuntu-latest
     steps:
