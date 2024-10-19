@@ -27,6 +27,11 @@ jobs:
           lambda:
             - 'lambda/**'
 
+    - name: Debug Changes Detection
+      run: |
+        echo "Frontend change detected: ${{ steps.filter.outputs.frontend }}"
+        echo "Lambda change detected: ${{ steps.filter.outputs.lambda }}"
+
   security-scan:
     needs: changes
     runs-on: ubuntu-latest
