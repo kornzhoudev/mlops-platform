@@ -57,19 +57,19 @@ const SentimentAnalyzer = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8 bg-white rounded-xl shadow-lg">
-      <h1 className="text-4xl font-bold mb-6 text-gray-800">Sentiment Analyzer</h1>
+    <div className="max-w-3xl mx-auto p-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-2xl">
+      <h1 className="text-5xl font-extrabold mb-6 text-white text-center">Sentiment Analyzer</h1>
       <textarea
-        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out mb-6"
+        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-4 focus:ring-purple-400 focus:border-transparent transition duration-300 ease-in-out mb-6 text-black"
         rows="4"
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Enter text to analyze..."
       />
       <button
-        className={`w-full py-3 px-6 text-white rounded-lg transition duration-200 ease-in-out flex items-center justify-center ${
-          isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-        }`}
+        className={`w-full py-3 px-6 text-white font-semibold rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center ${
+    isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-700 hover:bg-purple-800'
+  }`}
         onClick={analyzeSentiment}
         disabled={isLoading || !text.trim()}
       >
@@ -83,7 +83,7 @@ const SentimentAnalyzer = () => {
         )}
       </button>
       {error && (
-        <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-lg flex items-center">
+        <div className="mt-4 p-4 bg-red-200 text-red-900 rounded-lg flex items-center">
           <AlertCircle className="mr-2" size={20} />
           Error: {error}
         </div>
@@ -109,20 +109,20 @@ const ResultDisplay = ({ result }) => {
 
   const getColor = () => {
     switch(result.sentiment.toLowerCase()) {
-      case 'positive': return 'bg-green-100 text-green-700';
-      case 'negative': return 'bg-red-100 text-red-700';
-      default: return 'bg-yellow-100 text-yellow-700';
+      case 'positive': return 'bg-green-200 text-green-800';
+      case 'negative': return 'bg-red-200 text-red-800';
+      default: return 'bg-yellow-200 text-yellow-800';
     }
   };
 
   return (
-    <div className={`mt-8 p-6 rounded-lg ${getColor()} transition-all duration-500 ease-in-out`}>
-      <h2 className="text-2xl font-semibold mb-4">Analysis Result:</h2>
-      <div className="flex items-center text-lg">
+    <div className={`mt-8 p-6 rounded-lg ${getColor()} transition-all duration-500 ease-in-out shadow-md`}>
+      <h2 className="text-3xl font-bold mb-4">Analysis Result:</h2>
+      <div className="flex items-center text-2xl">
         {getIcon()}
         <span>{result.sentiment}</span>
       </div>
-      <div className="mt-2">
+      <div className="mt-2 text-lg">
         Confidence: {(result.confidence * 100).toFixed(2)}%
       </div>
     </div>
@@ -131,11 +131,11 @@ const ResultDisplay = ({ result }) => {
 
 const AnalysisHistory = ({ history }) => (
   <div className="mt-8">
-    <h2 className="text-2xl font-semibold mb-4">Recent Analyses</h2>
+    <h2 className="text-3xl font-bold mb-4">Recent Analyses</h2>
     <div className="space-y-4">
       {history.map((item, index) => (
-        <div key={index} className="p-4 bg-gray-100 rounded-lg">
-          <div className="font-semibold">{item.sentiment} ({(item.confidence * 100).toFixed(2)}%)</div>
+        <div key={index} className="p-4 bg-white text-gray-800 rounded-lg shadow-md">
+          <div className="font-semibold text-lg">{item.sentiment} ({(item.confidence * 100).toFixed(2)}%)</div>
           <div className="text-sm text-gray-600 truncate">{item.text}</div>
         </div>
       ))}
