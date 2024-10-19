@@ -32,15 +32,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
-    - name: Verify workspace
-      run: |
-        echo "Current directory:"
-        pwd
-        echo "Contents of current directory:"
-        ls -la
-        echo "Contents of frontend directory:"
-        ls -la frontend
     
     - name: Use Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v2
@@ -52,11 +43,6 @@ jobs:
       working-directory: frontend
       run: |
         npm ci
-
-    - name: List contents of workspace
-      run: |
-        echo "Contents of /github/workspace:"
-        ls -R /github/workspace
 
     - name: Run Snyk to check for vulnerabilities (Frontend)
       if: ${{ needs.changes.outputs.frontend == 'true' }}
