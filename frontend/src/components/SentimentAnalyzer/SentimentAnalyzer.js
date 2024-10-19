@@ -129,7 +129,6 @@ const ResultDisplay = ({ result }) => {
   );
 };
 
-// test
 const AnalysisHistory = ({ history }) => (
   <div className="mt-8">
     <h2 className="text-2xl font-semibold mb-4">Recent Analyses</h2>
