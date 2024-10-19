@@ -64,7 +64,7 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Install Python dependencies
+    - name: Install Python dependencies for Lambda
       if: ${{ needs.changes.outputs.lambda == 'true' }}
       working-directory: lambda
       run: |
@@ -75,9 +75,10 @@ jobs:
       uses: snyk/actions/python@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        SNYK_WORKING_DIRECTORY: lambda
       with:
         command: test
-        args: --file=lambda/requirements.txt --severity-threshold=high
+        args: --severity-threshold=high
 
   test-frontend:
     needs: [changes, security-scan]
@@ -90,7 +91,7 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
     - name: Cache npm dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v2
       with:
         path: ~/.npm
         key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -114,7 +115,7 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v2
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -154,7 +155,7 @@ jobs:
         locust --headless -f performance_test.py --users 10 --spawn-rate 1 -t 1m
 
   build-and-deploy:
-    needs: [changes, test-frontend, test-lambda, security-scan, performance-test-lambda]
+    needs: [changes, security-scan, test-frontend, test-lambda, performance-test-lambda]
     if: ${{ always() && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.lambda == 'true') }}
     runs-on: ubuntu-latest
     steps:
@@ -198,15 +199,19 @@ jobs:
     - name: Deploy Frontend to S3
       if: ${{ needs.changes.outputs.frontend == 'true' }}
       run: |
-        aws s3 sync frontend/build/ s3://${{ secrets.S3_BUCKET }} --delete
+        echo "Deploying frontend to S3..."
+        aws s3 sync frontend/build/ s3://${{ secrets.S3_BUCKET }} --delete --debug
+        echo "Frontend deployment completed."
     
     - name: Deploy Lambda
       if: ${{ needs.changes.outputs.lambda == 'true' }}
       run: |
+        echo "Deploying Lambda function..."
         VERSION=$(date +%Y%m%d%H%M%S)
-        aws lambda update-function-code --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --zip-file fileb://lambda_function.zip
-        aws lambda publish-version --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --description "Version $VERSION"
-        aws lambda update-function-configuration --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --environment "Variables={SAGEMAKER_ENDPOINT_NAME=${{ secrets.SAGEMAKER_ENDPOINT_NAME }}}"
+        aws lambda update-function-code --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --zip-file fileb://lambda_function.zip --debug
+        aws lambda publish-version --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --description "Version $VERSION" --debug
+        aws lambda update-function-configuration --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --environment "Variables={SAGEMAKER_ENDPOINT_NAME=${{ secrets.SAGEMAKER_ENDPOINT_NAME }}}" --debug
+        echo "Lambda deployment completed."
 
   # notify:
   #   needs: build-and-deploy
