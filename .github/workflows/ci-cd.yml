@@ -51,7 +51,7 @@ jobs:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         command: test
-        args: --file=/home/runner/work/mlops-platform/mlops-platform/frontend/package.json --severity-threshold=high
+        args: --file=frontend/package.json --severity-threshold=high
 
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       if: ${{ needs.changes.outputs.lambda == 'true' }}
