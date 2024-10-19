@@ -75,7 +75,6 @@ jobs:
       uses: snyk/actions/python@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        SNYK_WORKING_DIRECTORY: lambda
       with:
         command: test
         args: --file=lambda/requirements.txt --severity-threshold=high
