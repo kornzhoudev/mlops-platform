@@ -78,7 +78,7 @@ jobs:
         SNYK_WORKING_DIRECTORY: lambda
       with:
         command: test
-        args: --file=requirements.txt --severity-threshold=high
+        args: --file=lambda/requirements.txt --severity-threshold=high
 
   test-frontend:
     needs: [changes, security-scan]
