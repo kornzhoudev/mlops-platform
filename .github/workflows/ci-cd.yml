@@ -156,7 +156,11 @@ jobs:
 
   build-and-deploy:
     needs: [test-frontend, performance-test-lambda]
-    if: ${{ always() && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.lambda == 'true') }}
+    if: |
+      always() &&
+      (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.lambda == 'true') &&
+      (needs.test-frontend.result == 'success' || needs.test-frontend.result == 'skipped') &&
+      (needs.performance-test-lambda.result == 'success' || needs.performance-test-lambda.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
