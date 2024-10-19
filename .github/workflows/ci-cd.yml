@@ -78,7 +78,7 @@ jobs:
         SNYK_WORKING_DIRECTORY: lambda
       with:
         command: test
-        args: --severity-threshold=high
+        args: --file=requirements.txt --severity-threshold=high
 
   test-frontend:
     needs: [changes, security-scan]
@@ -105,7 +105,7 @@ jobs:
       run: npm test
 
   test-lambda:
-    needs: changes
+    needs: [changes, security-scan]
     if: ${{ needs.changes.outputs.lambda == 'true' }}
     runs-on: ubuntu-latest
     steps:
