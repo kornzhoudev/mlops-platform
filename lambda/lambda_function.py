@@ -9,6 +9,7 @@ logger.setLevel(logging.INFO)
 session = boto3.Session()
 runtime = session.client('runtime.sagemaker')
 ENDPOINT_NAME = os.environ['SAGEMAKER_ENDPOINT_NAME']
+print(ENDPOINT_NAME)
 
 def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event)}")
