@@ -7,7 +7,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 try:
-    ENDPOINT_NAME = os.environ['SAGEMAKER_ENDPOINT_NAME']
+    # ENDPOINT_NAME = os.environ['SAGEMAKER_ENDPOINT_NAME']
+    ENDPOINT_NAME = "sentiment-analysis-endpoint-1729402986"
 except KeyError:
     raise RuntimeError("SAGEMAKER_ENDPOINT_NAME environment variable is not set.")
 
