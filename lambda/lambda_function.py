@@ -12,7 +12,7 @@ try:
 except KeyError:
     raise RuntimeError("SAGEMAKER_ENDPOINT_NAME environment variable is not set.")
 
-# print(ENDPOINT_NAME)
+print(ENDPOINT_NAME)
 
 session = boto3.Session()
 runtime = session.client('runtime.sagemaker')

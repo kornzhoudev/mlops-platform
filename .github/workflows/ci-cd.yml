@@ -175,11 +175,11 @@ jobs:
         pip install -r requirements.txt -t .
         zip -r ../lambda_function.zip .
 
-    # Debug: List Files in Root Directory
-    - name: List Files in Root Directory
+    - name: Debug Lambda Deployment
       if: ${{ needs.changes.outputs.lambda == 'true' }}
       run: |
-        echo "Listing files in the root directory:"
+        echo "Lambda change detected: ${{ needs.changes.outputs.lambda }}"
+        echo "Listing all files before deploying Lambda:"
         ls -la
     
     # AWS configuration and deployment
