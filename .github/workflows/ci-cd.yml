@@ -163,7 +163,7 @@ jobs:
     
     # Lambda build
     - name: Set up Python ${{ env.PYTHON_VERSION }}
-      if: ${{ needs.changes.outputs.lambda == 'true' }}
+      if: ${{ always() }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ env.PYTHON_VERSION }}
@@ -190,7 +190,7 @@ jobs:
         echo "Frontend deployment completed."
     
     - name: Deploy Lambda
-      if: ${{ needs.changes.outputs.lambda == 'true' }}
+      if: ${{ always() }}
       run: |
         echo "Deploying Lambda function..."
         VERSION=$(date +%Y%m%d%H%M%S)
