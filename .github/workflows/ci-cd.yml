@@ -69,12 +69,7 @@ jobs:
       working-directory: lambda
       run: |
         pip install -r requirements.txt
-
-    - name: Install Python dependencies globally for Snyk scan
-      if: ${{ needs.changes.outputs.lambda == 'true' }}
-      working-directory: lambda
-      run: |
-        pip install boto3 pytest
+        pip install pytest boto3
 
     - name: Run Snyk to check for vulnerabilities (Lambda)
       if: ${{ needs.changes.outputs.lambda == 'true' }}
