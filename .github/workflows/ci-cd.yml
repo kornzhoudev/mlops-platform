@@ -158,7 +158,8 @@ jobs:
     - name: Run performance tests
       run: |
         cd lambda
-        locust --headless -f test_lambda_function.py --users 10 --spawn-rate 1 -t 1m
+        locust --headless -f locustfile.py --users 10 --spawn-rate 1 -t 1m
+
 
   build-and-deploy:
     needs: [test-frontend, test-lambda, performance-test-lambda]
