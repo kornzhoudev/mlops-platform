@@ -48,6 +48,7 @@ def lambda_handler(event, context):
         
         sentiment = result[0]['label']
         confidence = result[0]['score']
+        print(f"Sentiment: {sentiment}, Confidence: {confidence}")
         
         return {
             'statusCode': 200,
