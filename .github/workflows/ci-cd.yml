@@ -73,6 +73,13 @@ jobs:
         echo "boto3" >> requirements.txt
         echo "pytest" >> requirements.txt
 
+    - name: Debug - Print requirements.txt content
+      if: ${{ needs.changes.outputs.lambda == 'true' }}
+      working-directory: lambda
+      run: |
+        echo "Contents of requirements.txt:"
+        cat requirements.txt
+
     - name: Build custom Docker image for Snyk
       if: ${{ needs.changes.outputs.lambda == 'true' }}
       run: |
