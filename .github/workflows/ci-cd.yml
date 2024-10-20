@@ -142,7 +142,7 @@ jobs:
 
   build-and-deploy:
     needs: [test-frontend, test-lambda]
-    if: ${{ always() && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.lambda == 'true') }}
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
