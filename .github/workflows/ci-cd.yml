@@ -69,6 +69,7 @@ jobs:
       if: ${{ needs.changes.outputs.lambda == 'true' }}
       working-directory: lambda
       run: |
+        # Ensure each package is on a new line
         echo "boto3" >> requirements.txt
         echo "pytest" >> requirements.txt
 
@@ -78,7 +79,7 @@ jobs:
         cat <<EOF > Dockerfile
         FROM snyk/snyk:python
         COPY lambda/requirements.txt .
-        RUN pip install -r requirements.txt
+        RUN pip install --no-cache-dir -r requirements.txt
         EOF
         docker build -t custom-snyk-python .
 
