@@ -147,14 +147,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    # Debug Outputs
+    - name: Debug Outputs
+      run: |
+        echo "Lambda change output from changes job: ${{ needs.changes.outputs.lambda }}"
+
     # Frontend build and deploy
     - name: Use Node.js ${{ env.NODE_VERSION }}
-      if: ${{ needs.changes.outputs.frontend == 'true' }}
       uses: actions/setup-node@v2
       with:
         node-version: ${{ env.NODE_VERSION }}
     - name: Build Frontend
-      if: ${{ needs.changes.outputs.frontend == 'true' }}
       run: |
         cd frontend
         npm ci
@@ -163,25 +166,21 @@ jobs:
     
     # Lambda build
     - name: Set up Python ${{ env.PYTHON_VERSION }}
-      if: ${{ always() }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Build Lambda
-      if: ${{ needs.changes.outputs.lambda == 'true' }}
       run: |
         cd lambda
         pip install -r requirements.txt -t .
         zip -r ../lambda_function.zip .
-
-    - name: Debug Lambda Deployment
-      if: ${{ needs.changes.outputs.lambda == 'true' }}
-      run: |
-        echo "Lambda change detected: ${{ needs.changes.outputs.lambda }}"
-        echo "Listing all files before deploying Lambda:"
-        ls -la
     
+    # Debug Lambda Artifact
+    - name: Verify Lambda Artifact
+      run: |
+        ls -la lambda_function.zip
+
     # AWS configuration and deployment
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -190,15 +189,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-southeast-2
     
-    - name: Deploy Frontend to S3
-      if: ${{ needs.changes.outputs.frontend == 'true' }}
-      run: |
-        echo "Deploying frontend to S3..."
-        aws s3 sync frontend/build/ s3://${{ secrets.S3_BUCKET }} --delete --debug
-        echo "Frontend deployment completed."
-    
     - name: Deploy Lambda
-      if: ${{ needs.changes.outputs.lambda == 'true' }}
       run: |
         echo "Deploying Lambda function..."
         VERSION=$(date +%Y%m%d%H%M%S)
@@ -206,6 +197,7 @@ jobs:
         aws lambda publish-version --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --description "Version $VERSION" --debug
         aws lambda update-function-configuration --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} --environment "Variables={SAGEMAKER_ENDPOINT_NAME=${{ secrets.SAGEMAKER_ENDPOINT_NAME }}}" --debug
         echo "Lambda deployment completed."
+
       
 
   # notify:
