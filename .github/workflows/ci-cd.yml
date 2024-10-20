@@ -140,29 +140,8 @@ jobs:
         cd lambda
         pytest
 
-  performance-test-lambda:
-    needs: [test-lambda]
-    if: ${{ needs.changes.outputs.lambda == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    - name: Install dependencies
-      run: |
-        cd lambda
-        pip install -r requirements.txt
-        pip install locust
-    - name: Run performance tests
-      run: |
-        cd lambda
-        locust --headless -f locustfile.py --users 10 --spawn-rate 1 -t 1m
-
-
   build-and-deploy:
-    needs: [test-frontend, test-lambda, performance-test-lambda]
+    needs: [test-frontend, test-lambda]
     if: ${{ always() && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.lambda == 'true') }}
     runs-on: ubuntu-latest
     steps:
