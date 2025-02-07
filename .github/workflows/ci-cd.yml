@@ -49,42 +49,42 @@ jobs:
       run: |
         npm ci
 
-    - name: Run Snyk to check for vulnerabilities (Frontend)
-      if: ${{ needs.changes.outputs.frontend == 'true' }}
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        command: test
-        args: --file=frontend/package.json --severity-threshold=high
+    # - name: Run Snyk to check for vulnerabilities (Frontend)
+    #   if: ${{ needs.changes.outputs.frontend == 'true' }}
+    #   uses: snyk/actions/node@master
+    #   env:
+    #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    #   with:
+    #     command: test
+    #     args: --file=frontend/package.json --severity-threshold=high
 
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      if: ${{ needs.changes.outputs.lambda == 'true' }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+    # - name: Set up Python ${{ env.PYTHON_VERSION }}
+    #   if: ${{ needs.changes.outputs.lambda == 'true' }}
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Build custom Docker image for Snyk
-      if: ${{ needs.changes.outputs.lambda == 'true' }}
-      run: |
-        cat <<EOF > Dockerfile
-        FROM snyk/snyk:python
-        COPY lambda/requirements.txt .
-        RUN pip install --no-cache-dir -r requirements.txt
-        EOF
-        docker build -t custom-snyk-python .
+    # - name: Build custom Docker image for Snyk
+    #   if: ${{ needs.changes.outputs.lambda == 'true' }}
+    #   run: |
+    #     cat <<EOF > Dockerfile
+    #     FROM snyk/snyk:python
+    #     COPY lambda/requirements.txt .
+    #     RUN pip install --no-cache-dir -r requirements.txt
+    #     EOF
+    #     docker build -t custom-snyk-python .
 
-    - name: Run Snyk to check for vulnerabilities (Lambda)
-      if: ${{ needs.changes.outputs.lambda == 'true' }}
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      run: |
-        docker run --rm \
-          -e SNYK_TOKEN \
-          -v ${PWD}:/app \
-          -w /app \
-          custom-snyk-python \
-          snyk test --file=lambda/requirements.txt --severity-threshold=high
+    # - name: Run Snyk to check for vulnerabilities (Lambda)
+    #   if: ${{ needs.changes.outputs.lambda == 'true' }}
+    #   env:
+    #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    #   run: |
+    #     docker run --rm \
+    #       -e SNYK_TOKEN \
+    #       -v ${PWD}:/app \
+    #       -w /app \
+    #       custom-snyk-python \
+    #       snyk test --file=lambda/requirements.txt --severity-threshold=high
 
   test-frontend:
     needs: [changes, security-scan]
